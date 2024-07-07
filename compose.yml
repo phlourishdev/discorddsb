@@ -1,0 +1,27 @@
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: "plansdb"
+      MYSQL_USER: "discorddsb"
+      MYSQL_PASSWORD: "changeme"
+      MYSQL_ROOT_PASSWORD: "changeme"
+    volumes:
+      - "db_data:/var/lib/mysql"
+
+  discorddsb:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      MYSQL_DATABASE: "plansdb"
+      MYSQL_USER: "discorddsb"
+      MYSQL_PASSWORD: "changeme"
+      # DSB USER CREDENTIALS
+      DSB_USER: ${DSB_USER}
+      DSB_PASSWORD: ${DSB_PASSWORD}
+
+volumes:
+  db_data:
