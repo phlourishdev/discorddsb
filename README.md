@@ -11,7 +11,7 @@ At this moment this is very much WIP, see [Features/TODO](#featurestodo).
 - [ ] using a database for persistant storage
   - [X] prepare development environment with Docker
   - [X] initiate db connection
-  - [ ] create tables, develop db model
+  - [X] create tables, develop db model
   - [ ] add new entries to db
   - [ ] check if new entry already exists in db, if yes, skip
   - [ ] overwrite existing entries if data has changed

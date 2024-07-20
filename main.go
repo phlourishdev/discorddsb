@@ -13,7 +13,9 @@ import (
 	"time"
 )
 
+// retrieveToken uses DSBgo to fetch the DSB mobile user token
 func retrieveToken() string {
+	// get environment variables
 	username := os.Getenv("DSB_USER")
 	if username == "" {
 		log.Fatalf("DSB_USER environment variable is not set")
@@ -24,6 +26,7 @@ func retrieveToken() string {
 		log.Fatalf("DSB_PASSWORD environment variable is not set")
 	}
 
+	// make request to the DSB API to get the token
 	token, err := DSBgo.Authenticate(username, password)
 	if err != nil {
 		log.Fatalf("DSBgo.Authenticate failed: %v", err)
@@ -33,7 +36,9 @@ func retrieveToken() string {
 	return token
 }
 
+// retrievePlans uses DSBgo to fetch substitute plan information
 func retrievePlans(token string) ([]DSBgo.ProcessedPlan, error) {
+	// make request to the DSB API to get plan information
 	plans, err := DSBgo.GetPlans(token)
 	if err != nil {
 		return nil, fmt.Errorf("DSBgo.GetPlans failed: %v", err)
@@ -43,21 +48,21 @@ func retrievePlans(token string) ([]DSBgo.ProcessedPlan, error) {
 }
 
 func main() {
-	_, err := dbmanager.InitDB()
-	if err != nil {
-		log.Fatalf("DB initialization sequence failed: %v", err)
-	}
+	dbmanager.InitializeDB()
 
 	// Testing setup
-	token := retrieveToken()
-	plans, err := retrievePlans(token)
 	ticker := time.NewTicker(15 * time.Second) // TODO: subject to change
 	done := make(chan bool)
 	signals := make(chan os.Signal, 1)
-
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
-
 	var wg sync.WaitGroup
+
+	// DSBgo
+	token := retrieveToken()
+	plans, err := retrievePlans(token)
+	if err != nil {
+		log.Fatalf("retrievePlans failed: %v", err)
+	}
 
 	go func() {
 		for {
@@ -74,8 +79,9 @@ func main() {
 				wg.Wait()
 
 			case <-signals:
-				fmt.Println("Got shutdown signal")
+				log.Println("Got shutdown signal")
 				ticker.Stop()
+				dbmanager.CloseDB()
 				done <- true
 				return
 
@@ -86,5 +92,5 @@ func main() {
 	}()
 
 	<-done
-	fmt.Println("Shutting down gracefully")
+	log.Println("Shutting down gracefully")
 }
